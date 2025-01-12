@@ -1,16 +1,17 @@
-import React from 'react';
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import React from "react";
+import {createRoot} from "react-dom/client";
+import { Auth0Provider } from "@auth0/auth0-react";
+import App from "./App";
 
-import App from './App';
-
-
-const container = document.getElementById("root");    // retrieve DOM element with ID root (from index.html)
-const root = createRoot(container);                   // initialize React application for rendering
-
-
+const root = createRoot(document.getElementById("root"));
 root.render(
-  <BrowserRouter basename="/">    
+  <Auth0Provider
+    domain={"dev-0ctnrdkqcdk0fjq5.us.auth0.com"}
+    clientId={"sZEC7ds9gswNcdwsiMUqz0iZyH8nETzj"}
+    authorizationParams={{
+      redirect_uri: "http://localhost:5000/callback"
+    }}
+  >
     <App />
-  </BrowserRouter>
+  </Auth0Provider>
 );
