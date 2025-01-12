@@ -14,7 +14,7 @@ async function extractTextFromPdf(pdfPath) {
     return pdfData.text;
 }
 
-const systemMessage = "You are an artificial intelligence teacher and you need to ask a question based on the text provided by the user.";
+const systemMessage = "You are an artificial intelligence teacher and you need to ask 4-option multiple choice questions based on the text provided by the user.";
 
 async function generateQuiz(text) {
     try {
