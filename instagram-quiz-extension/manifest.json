@@ -3,15 +3,20 @@
   "name": "the quizzler",
   "version": "1.0",
   "description": "Adds quiz questions between Instagram reels",
-  "permissions": ["storage", "scripting", "tabs", "webNavigation"],
-  "host_permissions": ["https://www.instagram.com/reels/*"],
+  "permissions": ["storage", "scripting", "tabs", "webNavigation", "cookies"],
+  "host_permissions": ["https://www.instagram.com/reels/*", "https://www.youtube.com/shorts/*"],
   "background": {
     "service_worker": "scripts/background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.instagram.com/reels/*"],
+      "matches": ["https://www.instagram.com/*"],
       "js": ["scripts/content.js"],
+      "css": ["styles/content.css"]
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["scripts/content_yt.js"],
       "css": ["styles/content.css"]
     }
   ],
@@ -27,7 +32,7 @@
   "web_accessible_resources": [
     {
       "resources": ["images/quizzler.png"],
-      "matches": ["https://www.instagram.com/*"]
+      "matches": ["https://www.instagram.com/*", "https://www.youtube.com/*"]
     }
   ]
 }

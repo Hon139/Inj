@@ -5,12 +5,12 @@ let curInd = 0;
 let curReelCount = 0;
 const reelsPerQuiz = 5;
 
-let curQuizHandler = null;
-let quizReel = null;
+let reelHide = new Array();
 
 let wrongMessageText = "Wrong!";
 
-const prevURLS = new Array("https://www.instagram.com/reels/", "https://www.instagram.com/");
+const prevURLS = new Array("https://www.youtube.com/");
+console.log("prevURLS", prevURLS);
 
 const sampleQuizQuestions = [
     {
@@ -118,7 +118,9 @@ function handleQuizAnswer(selected, correct, buttonElement) {
         overlay.style.opacity = 0;
         setTimeout(() => {
           overlay.remove();
-          quizReel.style.display = 'block';
+          reelHide.forEach((element) => {
+            element.style.display = 'block';
+          });
           enableScroll();
         }, 250);
       }
@@ -147,7 +149,9 @@ function handleQuizAnswer(selected, correct, buttonElement) {
         setTimeout(() => {
           if (overlay) {
             overlay.remove();
-            quizReel.style.display = 'block';
+            reelHide.forEach((element) => {
+                element.style.display = 'block';
+            });
             enableScroll();
           }
         }, 250);
@@ -174,10 +178,9 @@ function createProgressCircle() {
 }
 
 function showQuiz() {
-  const reelContainer = document.querySelectorAll('[role="presentation"]')[curInd];
-  const reelBound = reelContainer.closest('[style*="height"][style*="width"]');
+  const reelContainer = document.querySelectorAll('ytd-reel-video-renderer')[curInd];
+  const reelBound = reelContainer;
 
-  console.log("trying to show quiz", reelBound);
   if (reelBound) {
     // Create quiz overlay
     const quizOverlay = document.createElement('div');
@@ -189,8 +192,13 @@ function showQuiz() {
     console.log("appended quiz content?", quizOverlay);
     
     // Add to page
-    reelBound.firstChild.style.display = 'none';
-    quizReel = reelBound.firstChild;
+    reelHide.push(reelBound.querySelector(".short-video-container"));
+    reelHide.push(reelBound.querySelector(".metadata-container"));
+    reelHide.push(reelBound.querySelector(".action-container"));
+
+    reelHide.forEach((element) => {
+        element.style.display = 'none';
+    });
 
     reelBound.insertBefore(quizOverlay, reelBound.firstChild);
     //shownQuizzes.add(currentReelID);
@@ -204,9 +212,8 @@ function showQuiz() {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "urlChanged") {
-    if (lastURL !== message.url && !prevURLS.includes(message.url) && !prevURLS.includes(lastURL) && /^https:\/\/www\.instagram\.com\/reels\/.+/.test(message.url)) {
-      console.log(shownQuizzes);
-      console.log("url changed", message.url, lastURL);
+    if (lastURL !== message.url && !prevURLS.includes(message.url) && !prevURLS.includes(lastURL) && message.url.startsWith("https://www.youtube.com/shorts/")) {
+      console.log("url changed", message.url, lastURL, prevURLS);
 
       if (!shownQuizzes.has(message.url)) {
         curInd++;
@@ -221,7 +228,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           curInd++;
         }
       }
-
+      console.log(shownQuizzes);
       if (curReelCount == reelsPerQuiz) {
         disableScroll();
         showQuiz();
@@ -233,14 +240,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function resetScript() {
-  curInd = 0;
-  curReelCount = 0;
-  shownQuizzes.clear();
-  lastURL = location.href;
-}
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "resetScripts") {
-    resetScript();
+    curInd = 0;
+    curReelCount = 0;
+    shownQuizzes.clear();
+    lastURL = location.href;
   }
-});
+  
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "resetScripts") {
+      resetScript();
+    }
+  });
