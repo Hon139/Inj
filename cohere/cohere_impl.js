@@ -1,8 +1,17 @@
 const dotenv = require('dotenv');
+const express = require('express');
 const PdfParse = require('pdf-parse');
+const bodyParser = require('body-parser');
+const multer = require('multer');
 const { CohereClientV2 } = require('cohere-ai');
+const mongoose = require('mongoose');
 const fs = require('fs');
+const Quiz = require('./models/quizzes');
 dotenv.config();
+
+const app = express();
+const port = 3000;
+
 // Load the API key from the environment variables
 // get quiz questions, make quiz questions
 const client = new CohereClientV2({ token: process.env.COHERE_API_KEY });
@@ -60,74 +69,58 @@ async function generateQuiz(block, blockIndex) {
 // Function to parse the quiz once the data is in the database
 async function parseQuiz(aiResponse) {
     const textFields = aiResponse.map(item => item.text).join("\n");
-    if (typeof textFields !== "string") {
-        throw new Error("AI response is not a string.");
+    if (!textFields || typeof textFields !== "string") {
+      throw new Error("AI response is not a string or is empty.");
     }
-    const [questionsPart, answersPart] = textFields.split("Answers:");      // Assume response will be separated by Answers: into questions and answers
-
-    const questions = questionsPart
-        .trim()
-        .split("\n")
-        .filter((line) => line) // Remove empty lines
-        .map((question) => question.trim());
-
-    const answers = answersPart
-        ? answersPart
-            .trim()
-            .split("\n")
-            .filter((line) => line) // Remove empty lines
-            .map((answer) => answer.trim()) : [];
-    let correctAnswerIndex = null;
-    let explanation = "";
-    const quizEntries = questions.map((questionBlock, index) => {
-        const [questionText, ...options] = questionBlock
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0);
-
-        const choices = options.reduce((acc, option) => {
-            const match = option.match(/^[a-d]\)\s+(.*)/); // match it to a) option text
-            if (match) {
-                acc[match[1]] = match[2];
-            }
-            return acc;
-        }, {});
-
-        // Extract correct answer index
-        
-        if (correctAnswerIndex === null) {
-            const correctAnswerMatch = answers[index]?.match(/Index:\s+(\d+)/);
-            correctAnswerIndex = correctAnswerMatch ? parseInt(correctAnswerMatch[1], 10) : null;
+  
+    // Split AI response into questions and answers sections
+    const [questionsPart, answersPart] = textFields.split("Answers:");
+  
+    // Extract questions
+    const questionBlocks = questionsPart
+      .trim()
+      .split("\n\n") // Split by double newlines for each question block
+      .map((block) => block.trim())
+      .filter((block) => block.length > 0);
+  
+    // Process each question block
+    const quizEntries = questionBlocks.map((block, index) => {
+      const lines = block.split("\n").map((line) => line.trim());
+  
+      // Extract question text (first line) and options (remaining lines)
+      const questionText = lines[0]; // First line is the question
+      const options = [];
+      const optionRegex = /^[a-d]\)\s+(.*)/i;
+  
+      lines.slice(1).forEach((line) => {
+        const match = line.match(optionRegex);
+        if (match) {
+          options.push(match[1]); // Extract option text (e.g., "Paris")
         }
-
-        // Extract explanation
-        if (explanation === "") {
-            const explanationMatch = answers[index]?.match(/Explanation:\s+(.*)/);
-            explanation = explanationMatch ? explanationMatch[1] : "";
-            
-        }
-        //console.log(correctAnswerIndex);
-        //console.log(explanation);
-        // Stop processing if any value is not null or empty
-        if (questionText && Object.keys(choices).length > 0 && correctAnswerIndex !== null && explanation) {
-            return {
-                question: questionText,
-                options: choices,
-                correctAnswerIndex, // Index of the correct answer
-                explanation, // Explanation for the correct answer
-            };
-        }
-        return null;
-    }).filter(entry => entry !== null);
-
-
+      });
+  
+      // Extract correct answer index
+      const correctAnswerMatch = answersPart.match(/Index:\s+(\d+)/);
+      const correctAnswerIndex = correctAnswerMatch ? parseInt(correctAnswerMatch[1], 10) : null;
+  
+      // Extract explanation
+      const explanationMatch = answersPart.match(/Explanation:\s+(.*)/);
+      const explanation = explanationMatch ? explanationMatch[1] : "Explanation not provided";
+  
+      return {
+        question: questionText,
+        options,
+        correct: correctAnswerIndex, // Index of the correct answer
+        explanation, // Explanation for the correct answer
+      };
+    });
+  
     return quizEntries;
 }
 
 async function processDoc(pdfPath) {
     try {
         const text = await extractTextFromPdf(pdfPath);
-
         const blocks = splitText(text, 2000);
 
         const allQuizzes = [];
@@ -139,17 +132,69 @@ async function processDoc(pdfPath) {
             }
         }
 
-        const quizData = {
-            quizzes: allQuizzes,
-        };
+        const savedQuizzes = await Quiz.insertMany(allQuizzes);
+        console.log("Quizzes saved to the database", savedQuizzes);
 
-        // send it to database
-        // await sendToDatabase(quizData);
-        console.log("All quizzes successfully sent.");
+        return savedQuizzes;
     } catch (error) {
         console.error("Error processing document:", error.message);
+        throw error;
     }
 }
 
+async function fetchQuizzes() {
+    try {
+        const quizzes = await Quiz.find();
+        console.log("Quizzes fetched from the database", quizzes);
+        return quizzes;
+    } catch (error) {
+        console.error("Error fetching quizzes:", error.message);
+        throw error;
+    }
+}
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// connect to mongodb
+mongoose.connect(process.env.MONGO_URI);
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, "Mongodb connection error:"));
+db.once("open", () => {
+    console.log("Connected to mongodb");
+});
+
+const upload = multer({ dest: "uploads/" });
+
+// REST API to POST the PDF file and process it
+app.post("/quizzes", upload.single("file"), async(req, res) => {
+    try {
+        const pdfPath = req.file.path;
+        const savedQuizzes = await processDoc(pdfPath);
+        res.json({message: "Quizzes generated successfully", quizzes: savedQuizzes});
+    } catch (error) {
+        console.error("Error processing document:", error.message);
+        res.status(500).json({message: "Failed to generate quizzes"});
+    }
+
+    
+});
+
+// REST API to GET all quizzes
+app.get("/quizzes", async (req, res) => {
+    try {
+        const quizzes = await fetchQuizzes();
+        res.json(quizzes);
+    } catch (error) {
+        res.status(500).json({message: "Failed to fetch quizzes"});
+    }
+});
+
 // Call the functions
-processDoc("lesson.pdf");
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
+
+//processDoc("lesson.pdf");
