@@ -1,9 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page</title>
+    <style>
+        
+        body {
+            background-color: #023047;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            min-height: 400px;
+            min-width: 300px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #8ecae6;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .toggle-button {
+            background-color: #219ebc;
+            color: white;
+        }
+        .toggle-button.off {
+            background-color: #fb8500;
+        }
+        .redirect-button {
+            background-color: #219ebc;
+            color: white;
+        }
+    </style>
+</head>
 <body>
 
-<h1>My First Heading</h1>
-<p>My first paragraph.</p>
+    <h1> TBD</h1>
+    <button class="button toggle-button" id="toggleButton">On</button>
+    <button class="button redirect-button" onclick="window.location.href='https://www.example.com';">Redirect</button>
+
+    <script>
+        const toggleButton = document.getElementById('toggleButton');
+        let isOn = true;
+
+        toggleButton.addEventListener('click', () => {
+            isOn = !isOn;
+            toggleButton.textContent = isOn ? 'On' : 'Off';
+            toggleButton.classList.toggle('off', !isOn);
+        });
+    </script>
 
 </body>
-</html> 
+</html>
