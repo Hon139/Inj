@@ -1,0 +1,20 @@
+{
+  "name": "instagram-quiz-extension",
+  "version": "1.0.0",
+  "description": "A Chrome extension that injects quizzes into Instagram reels.",
+  "main": "src/background.js",
+  "scripts": {
+    "build": "echo 'Build script not defined'",
+    "test": "echo 'Test script not defined'"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "keywords": [
+    "chrome",
+    "extension",
+    "instagram",
+    "quizzes"
+  ],
+  "author": "",
+  "license": "MIT"
+}
