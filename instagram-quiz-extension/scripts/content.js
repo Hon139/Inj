@@ -5,33 +5,40 @@ let curInd = 0;
 let curReelCount = 0;
 const reelsPerQuiz = 5;
 
-let curQuizHandler = null;
 let quizReel = null;
 
 let wrongMessageText = "Wrong!";
+const userID = 1;
 
 const prevURLS = new Array("https://www.instagram.com/reels/", "https://www.instagram.com/");
 
-const sampleQuizQuestions = [
-    {
-      question: "What is 2 + 2?",
-      options: ["3", "4", "5", "6"],
-      correct: 1
-    },
-    {
-      question: "What is the capital of France?",
-      options: ["London", "Paris", "Berlin", "Madrid"],
-      correct: 1
-    },
-    {
-      question: "What is the largest planet in our solar system?",
-      options: ["Earth", "Mars", "Jupiter", "Saturn"],
-      correct: 2
-    },
-    // Add more questions
-  ];
+const uri = 'http://localhost:3000/';
+let quizQuestions = 
+[
+  {
+    question: "What is the capital of France?",
+    options: ["Paris", "London", "Berlin", "Madrid"],
+    correct: 0,
+    explanation: "The capital of France is Paris."
+  },
+  {
+    question: "Which planet is known as the Red Planet?",
+    options: ["Earth", "Mars", "Jupiter", "Saturn"],
+    correct: 1,
+    explanation: "Mars is known as the Red Planet."
+  }
+];
 
-const quizQuestions = sampleQuizQuestions;
+async function getQuizData(userID) {
+    const response = await fetch(`${uri}quizzes?${new URLSearchParams({ userID: userID })}`);
+    const data = await response.json();
+    return data;
+}
+
+(async () => {
+  quizQuestions = await getQuizData(userID);
+  console.log("quiz questions", quizQuestions);
+})();
 
   // Add scroll control functions
 function disableScroll() {
@@ -65,13 +72,14 @@ function createQuizElement() {
   quizContainer.style.transition = 'opacity 0.5s';
 
   const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+  wrongMessageText = randomQuestion.explanation;
   console.log(chrome.runtime.getURL('/images/quizzler.png'));
   quizContainer.innerHTML = `
     <div style="
       width: 100%;
       text-align: center;
     ">
-      <img src="${chrome.runtime.getURL('/images/quizzler.png')}" alt="Quizzler" style="width: 100px; height: 100px; margin: 20px auto; border-radius: 50%;">
+      <img src="${chrome.runtime.getURL('/images/quizzler.png')}" alt="Quizzler" style="width: 100px; height: 100px; margin: 10px auto; border-radius: 50%;">
       <h2 style="color: white; font-size: 30px; margin: 10px;">The Quizzler queries?!</h2>
       <h3 style="
         font-size: 20px;
@@ -132,6 +140,8 @@ function handleQuizAnswer(selected, correct, buttonElement) {
         font-size: 24px;
         text-align: center;
         margin-top: 20px;
+        line-height: 1.5;
+        width: 90%;
       `;
       
       const progressCircle = createProgressCircle();
