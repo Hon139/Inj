@@ -22,6 +22,6 @@ app.get('/', (req, res) => {
     res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
 });
   
-app.listen(3000, () => {
+app.listen(5000, () => {
     console.log('Server running on http://localhost:3000');
 });

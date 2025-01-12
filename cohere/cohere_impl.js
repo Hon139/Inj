@@ -3,7 +3,7 @@ const express = require('express');
 const PdfParse = require('pdf-parse');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const { CohereClientV2 } = require('cohere-ai');
+const { CohereClientV2 } = require('cohere-ai');      
 const mongoose = require('mongoose');
 const fs = require('fs');
 const Quiz = require('./models/quizzes');
@@ -41,7 +41,7 @@ function splitText(text, blockSize) {
 
 async function generateQuiz(block, blockIndex) {
     try {
-        let systemMessage = "You are an artificial intelligence teacher that needs to teach students the topics related to the text you are given. List all multiple-choice questions first by saying Questions: and then the question number followed by all multiple choice options starting with a). Then, write Answers:. After that, output the index of the correct answer for the first question. For example, if the correct answer is b), then output Index: 2. In addition, give a thorough and polite explanation of the answer starting with Explanation: and then your explanation. Do this for all questions one at a time.";
+        let systemMessage = "You are an artificial intelligence teacher that needs to teach students the topics related to the text you are given. List all multiple-choice questions first by saying Questions: followed by all multiple choice options starting with a). After that, output the index of the correct answer for the first question. For example, if the correct answer is b), then output Index: 2. In addition, give a thorough and polite explanation of the answer starting with Explanation: and then your explanation. Do this for all questions one at a time. DO NOT put extra newline characters on otherwise empty lines.";
         const prompt = `This is Block ${blockIndex + 1} from a lesson:
           ---
           ${block}  // Limit input to Cohere's token limit
@@ -57,7 +57,7 @@ async function generateQuiz(block, blockIndex) {
             ],
         });
 
-        //console.log(response.message.content);
+        console.log(response.message.content);
         return response.message.content;
 
     } catch (error) {
@@ -68,11 +68,11 @@ async function generateQuiz(block, blockIndex) {
 
 // Function to parse the quiz once the data is in the database
 async function parseQuiz(aiResponse) {
-    const textFields = aiResponse.map(item => item.text).join("\n");
+    const textFields = aiResponse.map(item => item.text).join("");
     if (!textFields || typeof textFields !== "string") {
       throw new Error("AI response is not a string or is empty.");
     }
-  
+    
     // Split AI response into questions and answers sections
     const [questionsPart, answersPart] = textFields.split("Answers:");
   
@@ -88,14 +88,17 @@ async function parseQuiz(aiResponse) {
       const lines = block.split("\n").map((line) => line.trim());
   
       // Extract question text (first line) and options (remaining lines)
-      const questionText = lines[0]; // First line is the question
+      let questionText = lines[0]; // First line is the question
+      if(questionText = "Questions:"){
+        questionText = lines[1];
+      }
       const options = [];
       const optionRegex = /^[a-d]\)\s+(.*)/i;
   
       lines.slice(1).forEach((line) => {
         const match = line.match(optionRegex);
         if (match) {
-          options.push(match[1]); // Extract option text (e.g., "Paris")
+          options.push(match[1]);
         }
       });
   
@@ -169,8 +172,18 @@ db.once("open", () => {
 const upload = multer({ dest: "uploads/" });
 
 // REST API to POST the PDF file and process it
-app.post("/quizzes", upload.single("file"), async(req, res) => {
+app.post("/quizzes", upload.single("pdf"), async(req, res) => {
     try {
+        // Check if a file is uploaded
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+
+        // Validate file extension
+        const fileExtension = req.file.originalname.split(".").pop().toLowerCase();
+        if (fileExtension !== "pdf") {
+            return res.status(400).json({ message: "Invalid file type. Please upload a PDF file." });
+        }
         const pdfPath = req.file.path;
         const savedQuizzes = await processDoc(pdfPath);
         res.json({message: "Quizzes generated successfully", quizzes: savedQuizzes});
