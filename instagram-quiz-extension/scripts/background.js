@@ -7,17 +7,17 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tab.url) {
         chrome.tabs.sendMessage(tabId, { action: "urlChanged", url: tab.url });
-        const isReelsUrl = tab.url.startsWith('https://www.instagram.com/reels/');
+        const isReelsUrl = tab.url.startsWith('https://www.instagram.com/reels/') || tab.url.startsWith('https://www.youtube.com/shorts/');
         
         if (isReelsUrl) {
-            chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                files: ['scripts/content.js']
-            });
-            chrome.scripting.insertCSS({
-                target: { tabId: tabId },
-                files: ['styles/content.css']
-            });
+            // chrome.scripting.executeScript({
+            //     target: { tabId: tabId },
+            //     files: ['scripts/content.js']
+            // });
+            // chrome.scripting.insertCSS({
+            //     target: { tabId: tabId },
+            //     files: ['styles/content.css']
+            // });
         }
 
         else {
@@ -27,6 +27,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     enableScroll();
                 }
             });
+            chrome.runtime.sendMessage({ action: "resetScripts" });
         }
     }
 });
