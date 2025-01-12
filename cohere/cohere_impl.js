@@ -18,6 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
+/*
 //Auth0
 const config = {
     authRequired: false,
@@ -35,7 +36,7 @@ const config = {
   app.get('/', (req, res) => {
     res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
   });
-
+*/
 
 // Load the API key from the environment variables
 // get quiz questions, make quiz questions
@@ -219,7 +220,7 @@ db.once("open", () => {
 const upload = multer({ dest: "uploads/" });
 
 // REST API to POST the PDF file and process it
-app.post("/quizzes", upload.single("pdf"), async(req, res) => {
+app.post("/quizzes", upload.single("file"), async(req, res) => {
     try {
         const pdfPath = req.file.path;
         const userID = req.body.userID;
@@ -243,7 +244,7 @@ app.get("/quizzes", async (req, res) => {
     }
 });
 
-/*
+
 // REST API to DELETE all quizzes for a specific user
 app.delete("/quizzes", async (req, res) => {
     try {
@@ -255,7 +256,7 @@ app.delete("/quizzes", async (req, res) => {
         res.status(500).json({ message: "Failed to delete quizzes" });
     }
 });
-*/
+
 
 // Call the functions
 app.listen(port, () => {

@@ -79,6 +79,7 @@ const App = () => {
   };
 
   */
+ console.log("authenticated", isAuthenticated);
   return (
     <div>
       <h1>Upload PDF to Generate Quizzes</h1>

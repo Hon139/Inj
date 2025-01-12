@@ -1,51 +1,32 @@
-import { MouseEvent } from "react";
-
 function MainPage() {
-    const clickHandlerUpload = (event: MouseEvent) => {
-        fetch('http://localhost:3000', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: 'Upload button clicked' }),
-        })
-        .then(response => response.text())
-        .then(data => {
-            console.log('Upload Response:', data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    };
+    const clickHandlerUpload = async () => {
+        const input = document.querySelector('.file-input');
+        if (input.files && input.files.length > 0) {
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+            formData.append('userID', '1');
 
-    const clickHandlerLog = (event: MouseEvent) => {
-        fetch('http://localhost:3000', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: 'Sign In button clicked' }),
-        })
-        .then(response => response.text())
-        .then(data => {
-            console.log('Log Response:', data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+            try {
+                const response = await fetch('http://localhost:3000/quizzes', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await response.text();
+                console.log('Upload Response:', data);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        } else {
+            console.error('No file selected');
+        }
     };
 
     return (
         <>
-            <h1>Home Page</h1>
-            <img src="./instagram.png" alt="Instagram Logo" />
-            <button 
-                className="btn btn-outline btn-accent btn-lg btn-wide" 
-                type="button"
-                onClick={clickHandlerLog}
-            >
-                SIGN IN
-            </button>
+            <input
+                type="file"
+                className="file-input file-input-lg file-input-bordered file-input-primary w-full max-w-xs"
+            />
             <button 
                 className="btn btn-outline btn-accent btn-lg btn-wide" 
                 type="button"
@@ -53,11 +34,6 @@ function MainPage() {
             >
                 UPLOAD
             </button>
-
-            <input
-                type="file"
-                className="file-input file-input-lg file-input-bordered file-input-primary w-full max-w-xs"
-            />
 
             <style>{`
                 input {
