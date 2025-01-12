@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth0 Extension Example</title>
+    <script src="popup.js" defer></script>
+    <style>
+      body {
+        margin: 12px;
+        font-family: sans-serif;
+      }
+      #message {
+        font-weight: bold;
+      }
+
+/* CSS */
+.button-1 {
+  background-color: #EA4C89;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-family: "Haas Grot Text R Web", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  height: fit-content;
+  width:100px;
+  line-height: 20px;
+  list-style: none;
+  margin: 1px;
+  outline: none;
+  padding: 10px 16px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transition: color 100ms;
+  vertical-align: baseline;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.button-1:hover,
+.button-1:focus {
+  background-color: #F082AC;
+}
+    </style>
+  </head>
+  <body>
+    <button class="button-1" id="login">Log In</button>
+    <button class="button-1" id="logout">Log Out</button>
+    <button class="button-1" id="check">Check Status</button>
+    <div id="message"></div>
+  </body>
+</html>
+
+

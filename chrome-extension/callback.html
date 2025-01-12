@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth0 Callback</title>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const hash = window.location.hash.slice(1);
+        if (!hash) return;
+
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get("access_token");
+        const idToken = params.get("id_token");
+
+        // store or send them to the background
+        chrome.runtime.sendMessage({ accessToken, idToken }, () => {
+          // optionally close this page
+          window.close();
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Completing Auth0 Login...</h1>
+  </body>
+</html>

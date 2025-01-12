@@ -1,0 +1,5 @@
+/login-interface/node_modules/
+/node_modules
+/login-interface/.env
+
+/chrome-extension/.env
