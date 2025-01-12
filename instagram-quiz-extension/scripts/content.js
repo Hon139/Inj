@@ -1,5 +1,3 @@
-alert("loaded");
-
 let lastURL = location.href;
 const shownQuizzes = new Array(lastURL);
 
@@ -59,7 +57,9 @@ function preventArrowScroll(e) {
 function createQuizElement() {
   const quizContainer = document.createElement('div');
   quizContainer.className = 'quiz-content';
-  
+  quizContainer.style.opacity = 0;
+  quizContainer.style.transition = 'opacity 0.5s';
+
   const randomQuestion = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
   console.log(chrome.runtime.getURL('/images/quizzler.png'));
   quizContainer.innerHTML = `
@@ -68,7 +68,7 @@ function createQuizElement() {
       text-align: center;
     ">
       <img src="${chrome.runtime.getURL('/images/quizzler.png')}" alt="Quizzler" style="width: 100px; height: 100px; margin: 20px auto; border-radius: 50%;">
-      <h2 style="color: white; font-size: 30px; margin: 10px;">The quizzler queries</h2>
+      <h2 style="color: white; font-size: 30px; margin: 10px;">The quizzler queries?!</h2>
       <h3 style="
         font-size: 20px;
         margin: 20px;
@@ -95,9 +95,12 @@ function createQuizElement() {
     });
   });
 
+  setTimeout(() => {
+    quizContainer.style.opacity = 1;
+  }, 100);
+
   return quizContainer;
 }
-
 function handleQuizAnswer(selected, correct, buttonElement) {
   const isCorrect = selected === correct;
   const overlay = buttonElement.closest('.quiz-overlay');
@@ -107,9 +110,13 @@ function handleQuizAnswer(selected, correct, buttonElement) {
   if (isCorrect) {
     setTimeout(() => {
       if (overlay) {
-        overlay.remove();
-        quizReel.style.display = 'block';
-        enableScroll();
+        overlay.style.transition = 'opacity 0.25s';
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          overlay.remove();
+          quizReel.style.display = 'block';
+          enableScroll();
+        }, 250);
       }
     }, 1500);
   } else {
@@ -131,11 +138,15 @@ function handleQuizAnswer(selected, correct, buttonElement) {
       overlay.appendChild(progressCircle);
 
       setTimeout(() => {
-        if (overlay) {
-          overlay.remove();
-          quizReel.style.display = 'block';
-          enableScroll();
-        }
+        overlay.style.transition = 'opacity 0.25s';
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          if (overlay) {
+            overlay.remove();
+            quizReel.style.display = 'block';
+            enableScroll();
+          }
+        }, 250);
       }, 10000);
     }, 1500);
   }
